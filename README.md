@@ -1,4 +1,7 @@
+
 # PDF Tools (Divisor PDF)
+
+**Versión:** 1.0.0
 
 Aplicación de escritorio para dividir PDFs y validar carpetas de admisiones, desarrollada con Electron.
 
@@ -35,7 +38,3 @@ Aplicación de escritorio para dividir PDFs y validar carpetas de admisiones, de
 
 ## Autor
 Desarrollado por Arnaldo Pushaina
-
----
-
-**Nota:** No subas la carpeta `node_modules` ni los archivos generados en `dist/` a GitHub. Usa el `.gitignore` incluido.
