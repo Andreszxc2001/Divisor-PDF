@@ -7,16 +7,18 @@
 </head>
 <body>
   <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);padding:32px;">
-    <header style="border-bottom:1px solid var(--border);padding:24px 0 32px 0;width:100%;max-width:480px;background:none;display:flex;flex-direction:column;align-items:center;gap:10px;">
-        <img src="assets/img/logocorto_sinfondo.png" alt="Logo IPSI" style="width:140px;max-width:90vw;margin-bottom:18px;filter:drop-shadow(0 2px 12px #2224);background:#fff;border-radius:18px;padding:10px;box-shadow:0 2px 12px #2224;">
-      
-      <h1 style="font-family:var(--font-display);font-size:2.2rem;font-weight:800;color:var(--accent);letter-spacing:.04em;text-shadow:0 2px 16px #2224;">Divisor PDF</h1>
-      <h2 style="font-family:var(--font-display);font-size:1.5rem;font-weight:600;color:var(--muted);letter-spacing:.02em;text-shadow:0 1px 8px #2222;">IPSI EITERRA JAWAPIA SOPORTES</h2>
-    <br>
-    <span style="display:block;color:var(--muted);font-size:.98rem;margin-top:8px;">
-    Esta aplicación te permite dividir fácilmente tus archivos PDF en los diferentes prefijos (CRC, OPF, HAM, FEV, PDX, HEV, PDE), optimizando el proceso de facturación y gestión documental en la IPSI.
-    </span>
+
+    <!-- cabecera del programa -->
+    <header style="border-bottom:1px solid var(--border);padding:32px 0 36px 0;width:100%;max-width:480px;background:none;display:flex;flex-direction:column;align-items:center;gap:18px;">
+      <img src="assets/img/logocorto_sinfondo.png" alt="Logo IPSI" style="width:120px;max-width:80vw;margin-bottom:10px;filter:drop-shadow(0 2px 12px #2224);background:#fff;border-radius:18px;padding:10px;box-shadow:0 2px 12px #2224;">
+      <h1 style="font-family:var(--font-display);font-size:2.1rem;font-weight:800;color:var(--accent);letter-spacing:.04em;text-shadow:0 2px 16px #2224;margin-bottom:0;">Divisor PDF</h1>
+      <h2 style="font-family:var(--font-display);font-size:1.15rem;font-weight:600;color:var(--muted);letter-spacing:.02em;text-shadow:0 1px 8px #2222;margin-top:0;">IPSI EITERRA JAWAPIA SOPORTES</h2>
+      <span style="display:block;color:var(--muted);font-size:.98rem;margin-top:8px;text-align:center;line-height:1.5;">
+        Esta aplicación te permite dividir fácilmente tus archivos PDF en los diferentes prefijos <b>(CRC, OPF, HAM, FEV, PDX, HEV, PDE)</b>, optimizando el proceso de facturación y gestión documental en la IPSI.
+      </span>
     </header>
+
+    <!-- cuerpo del programa -->
     <main style="width:100%;max-width:480px;display:flex;flex-direction:column;gap:32px;margin-top:40px;">
       <div style="display:flex;flex-direction:column;gap:24px;">
         <a href="view/dividir_pdf.html" style="display:flex;align-items:center;gap:18px;padding:22px 24px;background:var(--surface);border-radius:16px;border:2px solid var(--border);text-decoration:none;transition:.2s;box-shadow:0 2px 16px #2222;">

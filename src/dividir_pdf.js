@@ -2,24 +2,43 @@ const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const NIT = '900795851';
 
 // ════════════════════════════════════════
 // CONFIG PERSISTIDA EN APPDATA
 // process.resourcesPath es de solo lectura
 // APPDATA siempre es escribible en cualquier PC
 // ════════════════════════════════════════
-const CONFIG_DIR = path.join(
+
+//*********************************** */
+//Rutas de configuración para guardar la carpeta madre seleccionada por el usuario
+//*********************************** */ 
+const CONFIG_DIR = path.join
+(
   process.env.APPDATA || os.homedir(),
   'DivisorPDF'
 );
+
+//lcturaa de la ruta selecionada por el usuario
 const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
 
-function leerConfig() {
-  try {
-    if (fs.existsSync(CONFIG_PATH)) {
+
+/********************** */
+//FuNCION: Lecura de ruta
+//********************* */
+function leerConfig() 
+{
+  try 
+  {
+    if (fs.existsSync(CONFIG_PATH)) 
+    {
       return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
     }
-  } catch {}
+  } 
+  catch 
+  {
+    
+  }
   return {};
 }
 
@@ -138,7 +157,7 @@ async function procesarDivisionPDF({ pdfFiles, asignaciones, numeroAdmision, car
   const resultados = [];
 
   for (const [tipo, paginas] of Object.entries(tiposDocumentos)) {
-    const nombreArchivo = `${tipo}_900795851_${numeroAdmision}.pdf`;
+    const nombreArchivo = `${tipo}_${NIT}_${numeroAdmision}.pdf`;
     const outputPath = path.join(carpetaAdmision, nombreArchivo);
 
     const paginasPorPDF = {};
