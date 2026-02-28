@@ -1,0 +1,50 @@
+{
+  "name": "divisor-pdf",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^40.6.1",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.tuempresa.pdftools",
+    "productName": "Divisor PDF - Eiteraa jawapia",
+    "asar": false,
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/img/logocorto_sinfondo.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/img/logocorto_sinfondo.ico",
+      "uninstallerIcon": "assets/img/logocorto_sinfondo.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "extraResources": [
+      {
+        "from": "vendor/",
+        "to": "vendor",
+        "filter": ["**/*"]
+      }
+    ],
+    "files": [
+      "**/*",
+      "!dist/",
+      "!node_modules/.cache",
+      "!*.md"
+    ]
+  }
+}

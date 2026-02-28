@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧹 Limpiar Carpetas</title>
+  <!-- Aquí va tu CSS compartido -->
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+
+  <header>
+    <a href="#" class="back-link" onclick="window.electronAPI.navegar('index.html')">← Dashboard</a>
+    <h1>🧹 Limpiar Carpetas</h1>
+    <div class="status-pill">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Verificando PDFtk…</span>
+    </div>
+  </header>
+
+  <main class="main-area">
+    <div class="container" id="vistaFormulario">
+      <h1 style="margin-bottom:24px;">🧹 Limpiar Carpetas</h1>
+
+      <section class="description" style="margin-bottom:32px;">
+        <h3 style="margin-bottom:10px;">🎯 ¿Qué hace esta herramienta?</h3>
+        <p>Valida que cada carpeta de admisión tenga los archivos PDF correctos y elimina archivos inválidos.</p>
+        <div class="ejemplo-box" style="background:var(--surface2);border-radius:8px;padding:16px;margin:16px 0;">
+          <span style="color:var(--green);">✅ <strong>Archivos válidos en carpeta 435677:</strong></span><br>
+          CRC_900795851_435677.pdf<br>
+          FEV_900795851_435677.pdf<br>
+          HAM_900795851_435677.pdf<br><br>
+          <span style="color:var(--red);">❌ <strong>Se elimina automáticamente:</strong></span><br>
+          435677.pdf ← sin prefijo válido<br>
+          documento.docx ← no es PDF válido<br><br>
+          <span style="color:var(--orange);">ℹ️ <strong>Se notifica pero NO se elimina:</strong></span><br>
+          HEV_900795851_435677.pdf ← prefijo válido pero no seleccionado
+        </div>
+        <ul style="margin-left:20px;">
+          <li>✅ Verifica que todos los archivos tengan el mismo número de admisión</li>
+          <li>✅ Comprueba que existan todos los tipos seleccionados</li>
+          <li>✅ Valida que el número coincida con el nombre de la carpeta</li>
+          <li>ℹ️ Notifica archivos con prefijo válido no seleccionados (no los elimina)</li>
+          <li>🗑️ Elimina archivos sin ningún prefijo válido</li>
+        </ul>
+      </section>
+
+      <!-- Selección de tipos -->
+      <section class="checkbox-group" style="margin-bottom:32px;">
+        <h3 style="margin-bottom:10px;">📋 Selecciona los tipos de archivos a validar:</h3>
+        <div class="checkbox-grid" id="checkboxGrid">
+          <div class="checkbox-item"><input type="checkbox" id="CRC" value="CRC"><label for="CRC">CRC_900795851_</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="OPF" value="OPF"><label for="OPF">OPF_900795851_</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="HAM" value="HAM"><label for="HAM">HAM_900795851_</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="FEV" value="FEV"><label for="FEV">FEV_900795851_</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="PDX" value="PDX"><label for="PDX">PDX_900795851_</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="HEV" value="HEV"><label for="HEV">HEV_900795851_</label></div>
+          <div class="checkbox-item"><input type="checkbox" id="PDE" value="PDE"><label for="PDE">PDE_900795851_</label></div>
+        </div>
+        <p class="warning-text" style="color:var(--orange);margin-top:10px;">⚠️ Debes seleccionar al menos un tipo de archivo</p>
+      </section>
+
+      <!-- Carpeta madre -->
+      <section style="margin-bottom:32px;">
+        <label class="file-label" style="font-weight:500;">Carpeta madre de admisiones:</label>
+        <div style="display:flex;gap:8px;align-items:center;max-width:500px;margin:0 auto;">
+          <input type="text" id="carpetaMadreInput" readonly style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:15px;font-family:var(--font-mono);">
+          <button id="btnSeleccionarCarpeta" style="padding:10px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:var(--font-mono);font-size:14px;cursor:pointer;">Cambiar</button>
+        </div>
+      </section>
+
+      <div style="text-align:center;">
+        <button id="btnValidar" class="btn-save">🔍 Validar y Limpiar Archivos</button>
+      </div>
+    </div>
+
+    <!-- ── RESULTADOS ── -->
+    <div class="container" id="vistaResultados" style="display:none;">
+      <h2 style="margin-bottom:24px;">🔍 Resultado de Validación</h2>
+
+      <!-- Tarjetas resumen -->
+      <div class="summary" id="resumenCards" style="display:flex;gap:16px;margin-bottom:24px;"></div>
+
+      <!-- Tipos validados -->
+      <div id="tiposValidadosBox" style="margin:20px 0;"></div>
+
+      <!-- Archivos eliminados -->
+      <div id="eliminadosBox"></div>
+
+      <!-- Detalle por carpeta -->
+      <h3 style="margin: 30px 0 20px 0;">📋 Detalles por Carpeta:</h3>
+      <div id="detallesCarpetas"></div>
+
+      <div style="text-align:center; margin-top:30px;">
+        <button id="btnVolver" class="btn-reset">🔁 Validar otra carpeta</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ════════════════════════════════════════
+    // VALIDAR
+    // ════════════════════════════════════════
+    // Carpeta madre: mostrar al cargar y cambiar
+    window.addEventListener('DOMContentLoaded', async () => {
+      if(window.electronAPI && window.electronAPI.getCarpetaMadre){
+        const ruta = await window.electronAPI.getCarpetaMadre();
+        document.getElementById('carpetaMadreInput').value = ruta;
+      }
+    });
+
+    document.getElementById('btnSeleccionarCarpeta').onclick = async () => {
+      if(window.electronAPI && window.electronAPI.seleccionarCarpetaMadre){
+        const nuevaRuta = await window.electronAPI.seleccionarCarpetaMadre();
+        if(nuevaRuta){
+          document.getElementById('carpetaMadreInput').value = nuevaRuta;
+        }
+      }
+    };
+
+    document.getElementById('btnValidar').addEventListener('click', async () => {
+      const rutaLocal = document.getElementById('carpetaMadreInput').value.trim();
+      const tiposSeleccionados = [...document.querySelectorAll('#checkboxGrid input:checked')]
+        .map(cb => cb.value);
+
+      if (!rutaLocal) {
+        alert('⚠️ Selecciona la carpeta madre de admisiones.');
+        return;
+      }
+      if (tiposSeleccionados.length === 0) {
+        alert('⚠️ Debes seleccionar al menos un tipo de archivo.');
+        return;
+      }
+
+      try {
+        const respuesta = await window.electronAPI.validarAdmisiones({ rutaLocal, tiposSeleccionados });
+        if (!respuesta.ok) throw new Error(respuesta.error);
+        mostrarResultados(respuesta.resultado, tiposSeleccionados);
+      } catch (e) {
+        alert('❌ Error: ' + e.message);
+      }
+    });
+
+    // ════════════════════════════════════════
+    // MOSTRAR RESULTADOS
+    // ════════════════════════════════════════
+    function mostrarResultados(data, tiposSeleccionados) {
+      const { resultados, archivosEliminados, resumen } = data;
+
+      // Cambiar vista
+      document.getElementById('vistaFormulario').style.display = 'none';
+      document.getElementById('vistaResultados').style.display = 'block';
+
+      // ── Tarjetas resumen ──
+      document.getElementById('resumenCards').innerHTML = `
+        <div class="stat-card">
+          <h3>📁 Total Carpetas</h3>
+          <p style="font-size:24px;font-weight:bold;">${resumen.totalCarpetas}</p>
+        </div>
+        <div class="stat-card success">
+          <h3>✅ Válidas</h3>
+          <p style="font-size:24px;font-weight:bold;">${resumen.carpetasValidas}</p>
+        </div>
+        <div class="stat-card error">
+          <h3>❌ Con Errores</h3>
+          <p style="font-size:24px;font-weight:bold;">${resumen.carpetasConError}</p>
+        </div>
+        <div class="stat-card warning">
+          <h3>🗑️ Eliminados</h3>
+          <p style="font-size:24px;font-weight:bold;">${resumen.totalEliminados}</p>
+        </div>
+      `;
+
+      // ── Tipos validados ──
+      document.getElementById('tiposValidadosBox').innerHTML = `
+        <div style="background:#e6f3ff;border:1px solid #4299e1;border-radius:8px;padding:15px;">
+          <h3 style="margin-bottom:8px;">🎯 Tipos validados:</h3>
+          <p>${tiposSeleccionados.join(', ')}</p>
+        </div>
+      `;
+
+      // ── Archivos eliminados ──
+      if (archivosEliminados.length > 0) {
+        document.getElementById('eliminadosBox').innerHTML = `
+          <div style="background:#fff5f5;border:1px solid #f56565;border-radius:8px;padding:15px;margin:20px 0;">
+            <h3 style="color:#c53030;margin-bottom:10px;">🗑️ Archivos eliminados (sin prefijo válido):</h3>
+            ${archivosEliminados.map(a => `<p style="color:#c53030;font-family:monospace;font-size:13px;">• ${a}</p>`).join('')}
+          </div>
+        `;
+      } else {
+        document.getElementById('eliminadosBox').innerHTML = '';
+      }
+
+      // ── Detalles por carpeta ──
+      const contenedor = document.getElementById('detallesCarpetas');
+      contenedor.innerHTML = '';
+
+      for (const [carpeta, datos] of Object.entries(resultados)) {
+        const esValida = datos.estado === 'VALIDO';
+        const div = document.createElement('div');
+        div.className = `carpeta-item ${esValida ? 'valida' : 'error'}`;
+
+        let html = `
+          <div class="carpeta-titulo">
+            📁 ${carpeta} —
+            <span class="estado-${esValida ? 'valido' : 'error'}">${datos.estado}</span>
+          </div>
+        `;
+
+        // Archivos válidos encontrados
+        if (datos.archivosValidos.length > 0) {
+          html += `
+            <div class="archivos-lista">
+              <strong>📄 Archivos válidos:</strong><br>
+              ${datos.archivosValidos.join('<br>')}
+            </div>
+          `;
+        }
+
+        // Archivos con prefijo válido no solicitados (notificación, NO eliminados)
+        if (datos.archivosNoSolicitados.length > 0) {
+          const lista = datos.archivosNoSolicitados
+            .map(a => `${a.tipo}: ${a.archivo}`)
+            .join('<br>');
+          html += `
+            <div style="background:#fffaf0;padding:10px;border-radius:5px;margin:5px 0;color:#c05621;border:1px solid #ed8936;">
+              <strong>ℹ️ Archivos con prefijo válido (no seleccionados, no eliminados):</strong><br>
+              ${lista}
+            </div>
+          `;
+        }
+
+        // Tipos faltantes
+        if (datos.tiposFaltantes && datos.tiposFaltantes.length > 0) {
+          html += `
+            <div style="background:#fff5f5;padding:10px;border-radius:5px;margin:5px 0;color:#c53030;border:1px solid #f56565;">
+              <strong>❌ Tipos faltantes:</strong> ${datos.tiposFaltantes.join(', ')}
+            </div>
+          `;
+        }
+
+        // Otros problemas
+        const otrosProblemas = datos.problemas.filter(p =>
+          !p.includes('no solicitados') && !p.includes('Archivos faltantes')
+        );
+        if (otrosProblemas.length > 0) {
+          html += `
+            <div class="problemas-lista">
+              <strong>⚠️ Problemas:</strong><br>
+              ${otrosProblemas.join('<br>')}
+            </div>
+          `;
+        }
+
+        div.innerHTML = html;
+        contenedor.appendChild(div);
+      }
+    }
+
+    // ── Volver al formulario ──
+    document.getElementById('btnVolver').addEventListener('click', () => {
+      document.getElementById('vistaResultados').style.display = 'none';
+      document.getElementById('vistaFormulario').style.display = 'block';
+    });
+  </script>
+
+  <footer>
+    <p style="color:var(--muted);font-size:.9rem;text-align:center;margin-top:40px;">Desarrollado por <a href="https://andrespushaina.com/" target="_blank" style="color:var(--accent);text-decoration:none;">Arnaldo Pushaina</a></p>
+    <div style="width:100%;display:flex;justify-content:center;">
+      <span style="display:inline-block;margin-top:8px;padding:4px 14px;background:var(--surface2);border-radius:8px;font-family:var(--font-mono);font-size:.92rem;color:var(--accent2);letter-spacing:.08em;box-shadow:0 2px 8px #2222;">Versión <b>1.0.0</b></span>
+    </div>
+  </footer>
+</body>
+</html>

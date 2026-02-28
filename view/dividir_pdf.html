@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dividir PDF por Páginas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <a href="#" class="back-link" onclick="window.electronAPI.navegar('index.html')">← Dashboard</a>
+    <h1>✂️ Dividir PDF por Páginas</h1>
+    <div class="status-pill">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Verificando PDFtk…</span>
+    </div>
+  </header>
+
+  <!-- APP -->
+  <div class="app">
+    <!-- MAIN -->
+    <div class="main-area">
+
+      <!-- Upload Zone -->
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="pdfFiles" multiple accept="application/pdf">
+        <span class="upload-icon">📄</span>
+        <h2>Arrastra tus PDFs aquí</h2>
+        <p>o haz clic para seleccionarlos<br>Puedes cargar varios PDFs a la vez</p>
+        <span class="upload-hint">Ctrl + Clic para selección múltiple</span>
+      </div>
+
+      <!-- PDFs cargados -->
+      <div class="pdf-badges" id="pdfBadges"></div>
+
+      <!-- Grid de páginas -->
+      <div id="pageSection" style="display:none">
+        <div class="section-header">
+          <h2 id="pageCount">0 páginas cargadas</h2>
+          <span>Selecciona un tipo → haz clic en las páginas</span>
+        </div>
+        <div class="page-grid" id="pageGrid"></div>
+      </div>
+
+      <!-- Resultado -->
+      <div class="result-panel" id="resultPanel">
+        <h3>✅ PDFs generados correctamente</h3>
+        <div class="result-path" id="resultPath"></div>
+        <div class="result-files" id="resultFiles"></div>
+        <button class="btn-reset" id="btnReset">🔄 Procesar nuevos PDFs</button>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <!-- Admisión -->
+      <div class="admision-input">
+        <label>Número de admisión</label>
+        <input type="text" id="numeroAdmision" placeholder="Ej: 435677">
+      </div>
+
+      <!-- Carpeta madre -->
+      <div class="admision-input" style="margin-top:18px;">
+        <label>Carpeta madre de destino</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="carpetaMadreInput" readonly style="flex:1;">
+          <button id="btnSeleccionarCarpeta" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:var(--font-mono);font-size:13px;cursor:pointer;">Cambiar</button>
+        </div>
+      </div>
+
+      <hr style="border-color: var(--border);">
+
+      <!-- Tipo buttons -->
+      <div>
+        <div class="sidebar-title" style="margin-bottom:12px">Tipo de documento</div>
+        <div class="tipo-grid">
+          <button class="tipo-btn" data-tipo="CRC">CRC</button>
+          <button class="tipo-btn" data-tipo="OPF">OPF</button>
+          <button class="tipo-btn" data-tipo="HAM">HAM</button>
+          <button class="tipo-btn" data-tipo="FEV">FEV</button>
+          <button class="tipo-btn" data-tipo="PDX">PDX</button>
+          <button class="tipo-btn" data-tipo="HEV">HEV</button>
+          <button class="tipo-btn" data-tipo="PDE">PDE</button>
+        </div>
+      </div>
+
+      <hr style="border-color: var(--border);">
+
+      <!-- Resumen -->
+      <div>
+        <div class="sidebar-title" style="margin-bottom:12px">Resumen</div>
+        <div class="resumen" id="resumen"></div>
+      </div>
+
+      <!-- Botón guardar -->
+      <button class="btn-save" id="btnGuardar" disabled style="margin-top:18px;box-shadow:0 2px 12px #5b6af088;font-size:1.08rem;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <span style="font-size:1.2em;">💾</span> <span>Guardar PDFs</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- MODAL PREVIEW -->
+  <div id="modal">
+    <div class="modal-inner">
+      <button class="modal-close" id="modalClose">✕</button>
+      <canvas id="modalCanvas"></canvas>
+      <div class="modal-controls">
+        <button class="modal-btn" id="prevPage">← Anterior</button>
+        <span class="modal-info" id="modalInfo"></span>
+        <button class="modal-btn" id="nextPage">Siguiente →</button>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <p style="color:var(--muted);font-size:.9rem;text-align:center;margin-top:40px;">Desarrollado por <a href="https://andrespushaina.com/" target="_blank" style="color:var(--accent);text-decoration:none;">Arnaldo Pushaina</a></p>
+    <div style="width:100%;display:flex;justify-content:center;">
+      <span style="display:inline-block;margin-top:8px;padding:4px 14px;background:var(--surface2);border-radius:8px;font-family:var(--font-mono);font-size:.92rem;color:var(--accent2);letter-spacing:.08em;box-shadow:0 2px 8px #2222;">Versión <b>1.0.0</b></span>
+    </div>
+  </footer>
+
+  <!-- TOASTS -->
+  <div class="toast-container" id="toasts"></div>
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="../assets/js/funciones.js"></script>
+  <script>
+    // Mostrar la ruta actual al cargar
+    window.addEventListener('DOMContentLoaded', async () => {
+      if(window.electronAPI && window.electronAPI.getCarpetaMadre){
+        const ruta = await window.electronAPI.getCarpetaMadre();
+        document.getElementById('carpetaMadreInput').value = ruta;
+      }
+    });
+
+    // Cambiar carpeta madre
+    document.getElementById('btnSeleccionarCarpeta').onclick = async () => {
+      if(window.electronAPI && window.electronAPI.seleccionarCarpetaMadre){
+        const nuevaRuta = await window.electronAPI.seleccionarCarpetaMadre();
+        if(nuevaRuta){
+          document.getElementById('carpetaMadreInput').value = nuevaRuta;
+        }
+      }
+    };
+
+    function actualizarResumen() {
+      const conteo = {};
+      Object.values(asignaciones).forEach(a => {
+        conteo[a.tipo] = (conteo[a.tipo] || 0) + 1;
+      });
+      const resumen = document.getElementById('resumen');
+      // Solo mostrar los tipos seleccionados
+      resumen.innerHTML = Object.entries(conteo).map(([tipo, n]) => {
+        const color = TIPOS_COLORES[tipo] || 'var(--accent)';
+        return `<div class="resumen-item has-pages" style="border-left-color:${color}">
+          <span>${tipo}</span>
+          <span class="resumen-count">${n}</span>
+        </div>`;
+      }).join('');
+      const total = Object.keys(asignaciones).length;
+      const btnG = document.getElementById('btnGuardar');
+      btnG.disabled = total === 0;
+    }
+  </script>
+</body>
+</html>
