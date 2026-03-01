@@ -3,31 +3,20 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
-// ════════════════════════════════════════
-// RUTAS — funcionan en dev Y empaquetado
-// app.getAppPath() siempre apunta a donde
-// está el código empaquetado (asar o carpeta)
-// ════════════════════════════════════════
 const APP_PATH = app.getAppPath();
 
-// Importar módulos propios usando ruta absoluta
 const { verificarPDFtk, procesarDivisionPDF, getCarpetaMadre, setCarpetaMadre } =
   require(path.join(APP_PATH, 'src', 'dividir_pdf'));
 
 const { validarAdmisiones, getCarpetaMadreAdmisiones, setCarpetaMadreAdmisiones } =
   require(path.join(APP_PATH, 'src', 'validar_admisiones'));
 
-// Carpeta temporal en el sistema (fuera del asar, puede escribirse)
 const TEMP_DIR = path.join(os.tmpdir(), 'divisor_pdf_temp');
 
-// ════════════════════════════════════════
-// VENTANA PRINCIPAL
-// ════════════════════════════════════════
 const WIN_OPTIONS = {
   width: 1200,
   height: 800,
   webPreferences: {
-    // app.getAppPath() garantiza que encuentra preload.js empaquetado
     preload: path.join(APP_PATH, 'preload.js'),
     contextIsolation: true,
     nodeIntegration: false
@@ -59,11 +48,9 @@ app.on('window-all-closed', () => {
 // IPC HANDLERS
 // ════════════════════════════════════════
 
-// 1. Navegación entre páginas
+// 1. Navegación
 ipcMain.handle('navegar', (event, archivo) => {
-  if (mainWin) {
-    mainWin.loadFile(path.join(APP_PATH, archivo));
-  }
+  if (mainWin) mainWin.loadFile(path.join(APP_PATH, archivo));
 });
 
 // 2. Verificar PDFtk
@@ -72,10 +59,17 @@ ipcMain.handle('verificar-pdftk', () => {
 });
 
 // 3. Guardar PDF temporal en disco
+// FIX: normalizar nombre para eliminar ñ, tildes y caracteres especiales
+// PDFtk falla si la ruta de entrada tiene caracteres no ASCII
 ipcMain.handle('guardar-temporal', (event, { nombre, buffer }) => {
   try {
-    const nombreLimpio = nombre.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const rutaTemp = path.join(TEMP_DIR, `${Date.now()}_${nombreLimpio}`);
+    const nombreNormalizado = nombre
+      .normalize('NFD')                      // descomponer tildes: á → a + acento
+      .replace(/[\u0300-\u036f]/g, '')       // eliminar diacríticos
+      .replace(/[\u00f1\u00d1]/g, 'n')       // ñ/Ñ → n
+      .replace(/[^a-zA-Z0-9._-]/g, '_');    // todo lo demás → _
+
+    const rutaTemp = path.join(TEMP_DIR, `${Date.now()}_${nombreNormalizado}`);
     fs.writeFileSync(rutaTemp, Buffer.from(buffer));
     console.log('[TEMP] Guardado:', rutaTemp, `(${fs.statSync(rutaTemp).size} bytes)`);
     return { ok: true, ruta: rutaTemp };
@@ -138,7 +132,7 @@ ipcMain.handle('set-carpeta-madre-admisiones', (event, nuevaRuta) => {
   return true;
 });
 
-// 9. Selector de carpeta nativo del sistema
+// 9. Selector de carpeta nativo
 ipcMain.handle('seleccionar-carpeta-madre', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
     properties: ['openDirectory']
