@@ -41,10 +41,12 @@
       }
     ],
     "files": [
-      "**/*",
-      "!dist/",
-      "!node_modules/.cache",
-      "!*.md"
+      "main.js",
+      "preload.js",
+      "index.html",
+      "src/**/*",
+      "view/**/*",
+      "assets/**/*"
     ]
   }
 }

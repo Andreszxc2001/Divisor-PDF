@@ -14,7 +14,7 @@ Aplicación de escritorio para dividir PDFs y validar carpetas de admisiones, de
 ## Instalación y uso
 1. Clona este repositorio:
    ```
-   git clone https://github.com/tuusuario/divisor-pdf.git
+   git clone https://github.com/Andreszxc2001/Divisor-PDF.git
    cd divisor-pdf
    ```
 2. Instala dependencias:
