@@ -124,7 +124,14 @@ async function procesarDivisionPDF({ pdfFiles, asignaciones, numeroAdmision, car
   if (!carpetaBase) throw new Error('No se ha configurado la carpeta de destino.');
 
   const carpetaAdmision = path.join(carpetaBase, numeroAdmision);
-  asegurarDirectorio(carpetaAdmision);
+  
+  // Crear la carpeta si no existe, o permitir que exista si ya está creada
+  if (!fs.existsSync(carpetaAdmision)) {
+    asegurarDirectorio(carpetaAdmision);
+    console.log(`[CARPETA] Creada nueva carpeta: ${carpetaAdmision}`);
+  } else {
+    console.log(`[CARPETA] Carpeta ya existe, agregando archivos: ${carpetaAdmision}`);
+  }
 
   const tiposDocumentos = {};
   asignaciones.forEach(p => {
@@ -175,6 +182,7 @@ async function procesarDivisionPDF({ pdfFiles, asignaciones, numeroAdmision, car
       }
 
       // Mover de temp al destino final — Node maneja ñ y tildes sin problema
+      // Si el archivo ya existe, lo sobrescribe
       fs.copyFileSync(outputTemp, outputFinal);
       fs.unlinkSync(outputTemp);
 
@@ -206,5 +214,7 @@ module.exports = {
   verificarPDFtk,
   encontrarPDFtk,
   getCarpetaMadre,
-  setCarpetaMadre
+  setCarpetaMadre,
+  leerConfig,
+  guardarConfig
 };
